@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from support.support_ui import color_message_box, gradient_border_box, color_header
-from support.support_supabase import get_surgeries, add_surgery, update_surgery, delete_surgery, sign_up, sign_in, sign_out, get_all_users, get_all_profiles, update_user_role
+from support.support_supabase import get_surgeries, add_surgery, update_surgery, delete_surgery, sign_up, sign_in, sign_out, get_all_users, get_all_profiles, update_user_role, get_alerts, get_actions
 
 
 def auth_screen():
@@ -129,3 +129,32 @@ def manage_users_page():
             st.rerun()
     else:
         st.info("No user profiles found.")
+
+
+def view_dataframes():
+    """Fetches and displays all three dataframes."""
+    st.header("Database Tables")
+
+    st.subheader("Alerts")
+    alerts_data = get_alerts()
+    if alerts_data:
+        df_alerts = pd.DataFrame(alerts_data)
+        st.dataframe(df_alerts)
+    else:
+        st.info("No alerts data to display.")
+
+    st.subheader("Surgeries")
+    surgeries_data = get_surgeries()
+    if surgeries_data:
+        df_surgeries = pd.DataFrame(surgeries_data)
+        st.dataframe(df_surgeries)
+    else:
+        st.info("No surgeries data to display.")
+
+    st.subheader("Actions")
+    actions_data = get_actions()
+    if actions_data:
+        df_actions = pd.DataFrame(actions_data)
+        st.dataframe(df_actions)
+    else:
+        st.info("No actions data to display.")
