@@ -35,17 +35,17 @@ def gradient_border_box(message: str):
     """
     st.html(html_code)
 
-def color_header(text: str):
+def color_header(message: str):
     html_code = f"""
-    <h1 style="
+    <div style="
         background: linear-gradient(135deg, #dc4c87, #ef9035);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: white;
+        padding: 7px 20px;
+        border-radius: 10px;
         font-family: Arial, sans-serif;
-        font-size: 2.5em;
-        font-weight: bold;
-        margin: 0;">
-        {text}
-    </h1>
+        font-size: 24px;
+        font-weight: 700;">
+      {message}
+    </div>
     """
     st.html(html_code)
