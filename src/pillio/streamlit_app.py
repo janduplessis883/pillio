@@ -6,6 +6,7 @@ from support.support_supabase import (
     get_alerts,
     get_surgeries,
     get_actions,
+    get_all_profiles,
     sign_up,
     sign_in,
     sign_out
@@ -44,7 +45,7 @@ def main_app(user_name):
             for alert in alerts:
                 alert_card(alert['title'], alert['issue_date'], alert['source'], alert['alert_refernce'])
 
-                with st.popover("More Info"):
+                with st.popover("More Info", icon=":material/info:"):
                     st.write(f"**Description:** {alert.get('description', 'N/A')}")
                     st.write(f"**Severity:** {alert.get('severity', 'N/A')}")
                     st.write(f"**Medication:** {alert.get('medication_name', 'N/A')}")
@@ -54,7 +55,41 @@ def main_app(user_name):
                         st.link_button("View PDF", alert['pdf_url'])
                     if alert.get('source_url'):
                         st.link_button("Source URL", alert['source_url'])
-                st.write()
+
+                with st.popover("Surgery Actions", icon=":material/badge:"):
+                    actions = get_actions()
+                    surgeries = get_surgeries()
+                    profiles = get_all_profiles()
+
+                    # Create a dictionary for quick lookup
+                    surgery_dict = {s['id']: s for s in surgeries}
+                    profile_dict = {p['user_id']: p for p in profiles}
+
+                    # Filter actions for the current alert
+                    filtered_actions = []
+                    for action in actions:
+                        if action['alert_id'] == alert['id']:
+                            surgery = surgery_dict.get(action['surgery_id'])
+                            if surgery:
+                                pharmacist_id = surgery.get('pharmacist_id')
+                                profile = profile_dict.get(pharmacist_id) if pharmacist_id else None
+                                user_name = profile['full_name'] if profile else "Unknown User"
+                                filtered_actions.append({
+                                    'surgery_name': surgery['name'],
+                                    'user_name': user_name,
+                                    'action_taken': action['action_taken'],
+                                    'status': action['status']
+                                })
+
+                    if filtered_actions:
+                        for action in filtered_actions:
+                            st.write(f"- **Surgery:** {action['surgery_name']}")
+                            st.write(f"  - **Action:** {action['action_taken']}")
+                            st.write(f"  - **Status:** {action['status']}")
+                            st.write(f"  - **Recorded by:** {action['user_name']}")
+                    else:
+                        st.write("No related actions found for this alert.")
+
         else:
             st.info("No alerts to display.")
 
