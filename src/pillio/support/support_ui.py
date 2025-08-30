@@ -68,12 +68,12 @@ def alert_card(title: str, issue_date: str, source: str, alert_reference: str):
         background-clip: padding-box, border-box;">
 
         <!-- Title -->
-        <div style="font-size: 18px; font-weight: 600; color: #4a3735; margin-bottom: 10px;">
+        <div style="font-size: 16px; font-weight: 600; color: #4a3735; margin-bottom: 10px;">
             {title}
         </div>
 
         <!-- Horizontal Meta Info -->
-        <div style="display: flex; gap: 20px; font-size: 14px; color: #4a3735;">
+        <div style="display: flex; gap: 20px; font-size: 13px; color: #4a3735;">
             <div>Issue Date: <strong>{issue_date}</strong></div>
             <div>Reference: <strong>{alert_reference}</strong></div>
             <div>Source: <strong>{source}</strong></div>
