@@ -10,46 +10,6 @@ url: str = st.secrets["SUPABASE_URL"]
 key: str = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(url, key)
 
-def get_todos():
-    try:
-        response = supabase.table('todos').select('*').execute()
-        return response.data
-    except Exception as e:
-        color_message_box(f"Error fetching todos: {e}")
-        return []
-
-def add_todo(task):
-    try:
-        supabase.table('todos').insert({'task': task}).execute()
-        st.toast("Task added successfully!", icon=":material/check:")
-        time.sleep(1)
-    except Exception as e:
-        color_message_box(f"Error adding todo: {e}")
-
-def delete_todo(task_id):
-    try:
-        supabase.table('todos').delete().eq('id', task_id).execute()
-        st.toast("Task deleted successfully!", icon=":material/delete:")
-        time.sleep(1)
-    except Exception as e:
-        color_message_box(f"Error deleting todo: {e}")
-
-def update_todo(task_id, new_task):
-    try:
-        supabase.table('todos').update({'task': new_task}).eq('id', task_id).execute()
-        st.toast("Task updated successfully!", icon=":material/edit:")
-        time.sleep(1)  # Brief pause to ensure update is processed
-    except Exception as e:
-        color_message_box(f"Error updating todo: {e}")
-
-def all_todos():
-    try:
-        response = supabase.table('todos').select('*').execute()
-        return response.data
-    except Exception as e:
-        color_message_box(f"Error fetching all todos: {e}")
-        return []
-
 def get_alerts():
     try:
         response = supabase.table('alerts').select('*').execute()
@@ -81,8 +41,8 @@ def add_surgery(name, location, contact_email):
             'location': location,
             'contact_email': contact_email
         }).execute()
-        st.toast("Surgery added successfully!", icon="✅")
-        time.sleep(1)
+        st.toast("Surgery added successfully!", icon=":material/check:")
+        time.sleep(2)
     except Exception as e:
         st.error(f"Error adding surgery: {e}")
 
@@ -93,8 +53,8 @@ def update_surgery(surgery_id, name, location, contact_email):
             'location': location,
             'contact_email': contact_email
         }).eq('id', surgery_id).execute()
-        st.toast("Surgery updated successfully!", icon="🔄")
-        time.sleep(1)
+        st.toast("Surgery updated successfully!", icon=":material/edit:")
+        time.sleep(2)
     except Exception as e:
         st.error(f"Error updating surgery: {e}")
 
@@ -102,9 +62,52 @@ def delete_surgery(surgery_id):
     try:
         supabase.table('surgeries').delete().eq('id', surgery_id).execute()
         st.toast("Surgery deleted successfully!", icon="🗑️")
-        time.sleep(1)
+        time.sleep(2)
     except Exception as e:
         st.error(f"Error deleting surgery: {e}")
+
+
+def add_action(alert_id, surgery_id, patients_affected, action_taken, notes, status, recorded_by):
+    try:
+        supabase.table('actions').insert({
+            'alert_id': alert_id,
+            'surgery_id': surgery_id,
+            'patients_affected': patients_affected,
+            'action_taken': action_taken,
+            'notes': notes,
+            'status': status,
+            'recorded_by': recorded_by
+        }).execute()
+        st.toast("Action added successfully!", icon=":material/check:")
+        time.sleep(2)
+    except Exception as e:
+        st.error(f"Error adding action: {e}")
+
+
+def update_action(action_id, alert_id, surgery_id, patients_affected, action_taken, notes, status, recorded_by):
+    try:
+        supabase.table('actions').update({
+            'alert_id': alert_id,
+            'surgery_id': surgery_id,
+            'patients_affected': patients_affected,
+            'action_taken': action_taken,
+            'notes': notes,
+            'status': status,
+            'recorded_by': recorded_by
+        }).eq('id', action_id).execute()
+        st.toast("Action updated successfully!", icon=":material/edit:")
+        time.sleep(2)
+    except Exception as e:
+        st.error(f"Error updating action: {e}")
+
+
+def delete_action(action_id):
+    try:
+        supabase.table('actions').delete().eq('id', action_id).execute()
+        st.toast("Action deleted successfully!", icon="🗑️")
+        time.sleep(2)
+    except Exception as e:
+        st.error(f"Error deleting action: {e}")
 
 def get_all_users():
     try:
@@ -135,9 +138,27 @@ def update_user_role(user_id, role):
         service_key: str = st.secrets["SUPABASE_SERVICE_KEY"]
         supabase_admin = create_client(url, service_key)
         supabase_admin.table('profiles').update({'role': role}).eq('user_id', user_id).execute()
-        st.toast(f"User role updated to {role}", icon="🔄")
+        st.toast(f"User role updated to {role}", icon=":material/edit:")
+        time.sleep(2)
     except Exception as e:
         st.error(f"Error updating user role: {e}")
+
+
+def delete_user(user_id):
+    try:
+        service_key: str = st.secrets["SUPABASE_SERVICE_KEY"]
+        supabase_admin = create_client(url, service_key)
+
+        # First, delete the user's profile
+        supabase_admin.table('profiles').delete().eq('user_id', user_id).execute()
+
+        # Then, delete the user from auth
+        supabase_admin.auth.admin.delete_user(user_id)
+
+        st.toast("User deleted successfully!", icon=":material/delete:")
+        time.sleep(2)
+    except Exception as e:
+        st.error(f"Error deleting user: {e}")
 
 
 # Supabase Authentication
@@ -163,6 +184,7 @@ def sign_in(email, password):
     try:
         user_response = supabase.auth.sign_in_with_password({"email": email, "password": password})
         if user_response.user:
+            st.session_state.user_id = user_response.user.id
             # Fetch the user's profile to get their role
             profile_response = get_user_profile(user_response.user.id)
             if profile_response and profile_response.data:
@@ -177,6 +199,7 @@ def sign_out():
         st.session_state.user_email = None
         st.session_state.user_name = None
         st.session_state.user_role = None
+        st.session_state.user_id = None
         st.success("You have been logged out.")
         st.rerun()
     except Exception as e:
